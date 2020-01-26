@@ -1,0 +1,5 @@
+*~
+*.eld
+auto-save-list/**
+elpa/
+straight/
