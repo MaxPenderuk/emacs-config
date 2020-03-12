@@ -37,9 +37,6 @@
 (projectile-mode +1)
 (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
 
-(setq indent-tabs-mode nil
-      js-indent-level 2)
-
 ;; Use ⌘ as meta, ⌥ as always
 (setq mac-option-key-is-meta nil
       mac-command-key-is-meta t
@@ -85,13 +82,13 @@
     (bind-keys :map company-active-map
                ("C-\\" . company-try-hard)))
   :diminish company-mode)
-	
+
 ;; Install improved JavaScript editing mode.
 
 (use-package js2-mode
   :mode (("\\.js$" . js2-mode)
-	 ("\\.es6\\'" . js2-mode)
-	 ("\\.ejs\\'" . js2-mode))
+   ("\\.es6\\'" . js2-mode)
+   ("\\.ejs\\'" . js2-mode))
   :interpreter "node"
   :commands js2-mode
   :config
@@ -169,8 +166,8 @@
     (helm-grep-do-git-grep (vc-root-dir)))
   (bind-key "C-x C-M-g" 'grep-do-git-grep-root)
   :bind (("M-x" . helm-M-x)
-	 ("C-x C-f" . helm-find-files)
-	 ("C-x b" . helm-buffers-list))
+   ("C-x C-f" . helm-find-files)
+   ("C-x b" . helm-buffers-list))
   :diminish helm-mode)
 
 (use-package helm-projectile
@@ -178,3 +175,118 @@
   :bind (("C-c C-f" . helm-projectile-find-file-dwim)
          ("C-x C-g" . helm-grep-do-git-grep))
   :config (helm-projectile-on))
+
+(use-package prettier-js
+  :commands prettier-js
+  :bind ("C-c C-p" . prettier-js)
+  )
+
+;; EDITING
+
+;; Make the selection work like most people expect.
+(delete-selection-mode t)
+(transient-mark-mode t)
+
+;; Disable the auto-save feature
+(setq auto-save-default nil)
+
+;; Automatically insert matching braces and do other clever
+;; things pertaining to braces and such.
+(electric-pair-mode 1)
+
+(set-default 'indent-tabs-mode nil)
+(setq sentence-end-double-space nil)
+(define-key global-map (kbd "RET") 'newline-and-indent)
+(setq-default tab-width 2)
+
+;; A key for intelligently shrinking whitespace.
+;; See https://github.com/jcpetkovich/shrink-whitespace.el for details.
+(use-package shrink-whitespace
+  :commands shrink-whitespace
+  :bind ("C-c DEL" . shrink-whitespace))
+
+;; Highlight changed areas with certain operations, such as undo, kill, yank.
+(use-package volatile-highlights
+  :commands volatile-highlights-mode
+  :config
+  (volatile-highlights-mode t)
+  :diminish volatile-highlights-mode)
+
+;; JavaScript
+(setq-default js2-basic-offset 2)
+
+;; TypeScript
+(setq typescript-indent-level 2
+      typescript-expr-indent-offset 2)
+
+;; HTML etc with web-mode
+(setq-default web-mode-markup-indent-offset 2
+        web-mode-css-indent-offset 2
+              web-mode-code-indent-offset 2
+              web-mode-style-padding 2
+              web-mode-script-padding 2)
+
+;; supercharge undo
+(use-package undo-tree
+  :init
+  (global-undo-tree-mode)
+  (setq undo-tree-visualizer-timestamps t)
+  (setq undo-tree-visualizer-diff t)
+  :diminish undo-tree-mode)
+
+(setq sentence-end-double-space nil)
+
+;; Always indent after a newline.
+(define-key global-map (kbd "RET") 'newline-and-indent)
+
+;; Strict whitespace with ethan-wspace: highlight bad habits,
+;; and automatically clean up your code when saving.
+;; Use C-c c to instantly clean up your file.
+;; Read more about ethan-wspace: https://github.com/glasserc/ethan-wspace
+(use-package ethan-wspace
+  :demand t
+  :commands global-ethan-wspace-mode
+  :config
+  (global-ethan-wspace-mode 1)
+  :bind ("C-c c" . ethan-wspace-clean-all)
+  :diminish ethan-wspace-mode)
+
+(set-default 'indent-tabs-mode nil)
+(set-default 'mode-require-final-newline nil)
+
+(setq frame-title-format '(buffer-file-name "%f" ("%b")))
+
+;; Show line numbers in buffers.
+(global-linum-mode t)
+(setq linum-format (if (not window-system) "%4d " "%4d"))
+
+;; Ensure linum-mode is disabled in certain major modes.
+(setq linum-disabled-modes
+      '(term-mode slime-repl-mode magit-status-mode help-mode nrepl-mode
+        mu4e-main-mode mu4e-headers-mode mu4e-view-mode
+        mu4e-compose-mode))
+(defun linum-on ()
+  (unless (or (minibufferp) (member major-mode linum-disabled-modes))
+    (linum-mode 1)))
+
+;; Highlight the line number of the current line.
+(use-package hlinum
+  :config
+  (hlinum-activate))
+
+;; Show column numbers in modeline.
+(setq column-number-mode t)
+
+;; Show current function in modeline.
+(which-function-mode)
+
+;; Highlight matching braces.
+(show-paren-mode 1)
+
+;; GIT
+
+;; Invoke Magit by typing C-x g.
+;; See http://magit.github.io/ for instructions.
+(use-package magit
+  :commands magit-status
+  :bind ("C-x g" . magit-status))
