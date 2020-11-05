@@ -30,8 +30,14 @@
 
 (blink-cursor-mode 0)
 
-(use-package dracula-theme)
-(load-theme 'dracula t)
+(set-face-attribute 'default (selected-frame) :height 140)
+
+(setq spacemacs-theme-comment-bg nil
+      spacemacs-theme-comment-italic t)
+
+(use-package spacemacs-theme
+  :defer t
+  :init (load-theme 'spacemacs-dark t))
 
 (use-package projectile)
 (projectile-mode +1)
@@ -116,6 +122,10 @@
               (when (not (equal 'emacs-lisp-mode major-mode))
                 (flycheck-mode)))))
 
+;; Bind M-n and M-p to navigate to the next/previous errors.
+(global-set-key (kbd "M-n") 'next-error)
+(global-set-key (kbd "M-p") 'previous-error)
+
 ;; Use web-mode for all JS files.
 (use-package web-mode
   :mode (("\\.tsx?$" . web-mode)
@@ -141,6 +151,8 @@
   :after (web-mode company flycheck)
   :hook ((web-mode . tide-setup)
          (web-mode . tide-hl-identifier-mode))
+  :mode (("\\.tsx?$" . web-mode)
+         ("\\.ts\\'" . web-mode))
   :config
   (defun setup-tide-mode ()
     (interactive)
@@ -256,9 +268,79 @@
 
 (setq frame-title-format '(buffer-file-name "%f" ("%b")))
 
-;; Show line numbers in buffers.
-(global-linum-mode t)
-(setq linum-format (if (not window-system) "%4d " "%4d"))
+;; C-c <left/right> to manage windows history
+(winner-mode 1)
+;; M-<number> to switch windows
+(use-package winum
+  :init
+  (progn
+    (setq winum-keymap
+          (let ((map (make-sparse-keymap)))
+            (define-key map (kbd "C-`") 'winum-select-window-by-number)
+            (define-key map (kbd "C-²") 'winum-select-window-by-number)
+            (define-key map (kbd "M-0") 'winum-select-window-0-or-10)
+            (define-key map (kbd "M-1") 'winum-select-window-1)
+            (define-key map (kbd "M-2") 'winum-select-window-2)
+            (define-key map (kbd "M-3") 'winum-select-window-3)
+            (define-key map (kbd "M-4") 'winum-select-window-4)
+            (define-key map (kbd "M-5") 'winum-select-window-5)
+            (define-key map (kbd "M-6") 'winum-select-window-6)
+            (define-key map (kbd "M-7") 'winum-select-window-7)
+            (define-key map (kbd "M-8") 'winum-select-window-8)
+            map))
+    (winum-mode)))
+
+(defun kill-other-buffers ()
+  (interactive)
+  (mapc 'kill-buffer (delq (current-buffer) (buffer-list))))
+(global-set-key (kbd "C-c k o") 'kill-other-buffers)
+
+(defun kill-all-buffers ()
+  (interactive)
+  (mapc 'kill-buffer (buffer-list)))
+(global-set-key (kbd "C-c k a") 'kill-all-buffers)
+
+;; GIT
+
+;; Invoke Magit by typing C-x g.
+;; See http://magit.github.io/ for instructions.
+(use-package magit
+  :commands magit-status
+  :bind ("C-x g" . magit-status))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(ansi-color-names-vector
+   ["#0a0814" "#f2241f" "#67b11d" "#b1951d" "#4f97d7" "#a31db1" "#28def0" "#b2b2b2"])
+ '(custom-safe-themes
+   (quote
+    ("bffa9739ce0752a37d9b1eee78fc00ba159748f50dc328af4be661484848e476" default)))
+ '(hl-todo-keyword-faces
+   (quote
+    (("TODO" . "#dc752f")
+     ("NEXT" . "#dc752f")
+     ("THEM" . "#2d9574")
+     ("PROG" . "#4f97d7")
+     ("OKAY" . "#4f97d7")
+     ("DONT" . "#f2241f")
+     ("FAIL" . "#f2241f")
+     ("DONE" . "#86dc2f")
+     ("NOTE" . "#b1951d")
+     ("KLUDGE" . "#b1951d")
+     ("HACK" . "#b1951d")
+     ("TEMP" . "#b1951d")
+     ("FIXME" . "#dc752f")
+     ("XXX+" . "#dc752f")
+     ("\\?\\?\\?+" . "#dc752f"))))
+ '(pdf-view-midnight-colors (quote ("#b2b2b2" . "#292b2e"))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(magit-mode-line-process ((t (:inherit mode-line-emphasis :foreground "medium purple")))))
 
 ;; Ensure linum-mode is disabled in certain major modes.
 (setq linum-disabled-modes
@@ -283,10 +365,7 @@
 ;; Highlight matching braces.
 (show-paren-mode 1)
 
-;; GIT
-
-;; Invoke Magit by typing C-x g.
-;; See http://magit.github.io/ for instructions.
-(use-package magit
-  :commands magit-status
-  :bind ("C-x g" . magit-status))
+(use-package doom-modeline
+  :ensure t
+  :init (doom-modeline-mode 1))
+(setq doom-modeline-buffer-file-name-style 'file-name)
